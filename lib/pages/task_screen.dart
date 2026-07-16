@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:mawai_inquiry_app/bloc/inquiry_list_bloc.dart';
 import 'package:mawai_inquiry_app/bloc/task_list_bloc.dart';
 import 'package:mawai_inquiry_app/pages/add_task_screen.dart';
@@ -11,6 +12,7 @@ import '../services/inquiry_service.dart';
 import '../state/inquiry_list_state.dart';
 import '../state/task_list_state.dart';
 import 'add_inquiry_screen.dart';
+import 'edit_task_screen.dart';
 
 class TaskScreen extends StatefulWidget {
   const TaskScreen({super.key});
@@ -21,6 +23,7 @@ class TaskScreen extends StatefulWidget {
 
 class _TaskScreenState extends State<TaskScreen> {
 
+
   final TextEditingController searchController = TextEditingController();
 
   List<TaskListModel> taskData = [];
@@ -29,12 +32,22 @@ class _TaskScreenState extends State<TaskScreen> {
   late InquiryService inquiryService;
   late TaskListBloc taskListBloc;
 
+
   @override
   void initState() {
     super.initState();
     inquiryService = Provider.of<InquiryService>(context, listen: false);
     taskListBloc = TaskListBloc(inquiryService);
     taskListBloc.init();
+  }
+
+  String formatDate(String date) {
+    try {
+      return DateFormat("dd-MMM-yyyy")
+          .format(DateTime.parse(date));
+    } catch (e) {
+      return date;
+    }
   }
 
   @override
@@ -48,8 +61,17 @@ class _TaskScreenState extends State<TaskScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        backgroundColor: const Color(0xff0A174B),
-        title: const Text("Task List"),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        centerTitle: true,
+        automaticallyImplyLeading: true,
+        iconTheme: const IconThemeData(
+          color: Color(0xff0A174B),
+        ),
+        title: Image.asset(
+          "assets/images/mawai_logo.png",
+          scale: 8,
+        ),
       ),
       body: Column(
         children: [
@@ -195,7 +217,7 @@ class _TaskScreenState extends State<TaskScreen> {
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: SizedBox(
-            width: 700,
+            width: 750,
             child: SingleChildScrollView(
               child: Container(
                 decoration: BoxDecoration(
@@ -219,14 +241,14 @@ class _TaskScreenState extends State<TaskScreen> {
                       ),
                     ),
                     columnWidths: const {
-                      0: FixedColumnWidth(30),
-                      1: FixedColumnWidth(80),
-                      2: FixedColumnWidth(140),
-                      3: FixedColumnWidth(120),
-                      4: FixedColumnWidth(80),
-                      5: FixedColumnWidth(50),
-                      6: FixedColumnWidth(80),
-
+                      0: FixedColumnWidth(60),   // Action
+                      1: FixedColumnWidth(40),   // S.No
+                      2: FixedColumnWidth(90),   // Department
+                      3: FixedColumnWidth(90),  // Details
+                      4: FixedColumnWidth(140),  // Assign To
+                      5: FixedColumnWidth(140),   // Task Date
+                      6: FixedColumnWidth(80),   // Target Date
+                      7: FixedColumnWidth(60),   // Critical
                     },
                     children: [
                       TableRow(
@@ -234,14 +256,15 @@ class _TaskScreenState extends State<TaskScreen> {
                           color: Color(0xff0A174B),
                         ),
                         children: [
+                          header("Action"),
                           header("S.No"),
                           header("Department"),
+                          header("Task Date"),
                           header("Details"),
                           header("Assign To"),
+
                           header("Target Date"),
                           header("Critical"),
-                          header("Status"),
-
                         ],
                       ),
 
@@ -256,13 +279,36 @@ class _TaskScreenState extends State<TaskScreen> {
                                 : const Color(0xffF8FAFC),
                           ),
                           children: [
+                            Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.edit,
+                                  color: Color(0xff0A174B),
+                                ),
+                                onPressed: () async {
+                                  final result = await Navigator.push<bool>(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => EditTaskScreen(task: item),
+                                    ),
+                                  );
+
+                                  if (result == true) {
+                                    taskListBloc.init();
+                                  }
+                                },
+                              ),
+                            ),
                             cell("${index + 1}", center: true),
                             cell(item.getDepartment!.name),
+                            cell(formatDate(item.taskDate)),
                             cell(item.taskDetail),
                             cell("${item.getEmployee!.firstName} ${item.getEmployee!.lastName}"),
-                            cell(item.targetDate),
+                            cell(formatDate(item.targetDate)),
                             cell(item.criticalYN == "Y" ? "Yes" : "No"),
-                            cell(item.status),
+
+
 
 
                           ],

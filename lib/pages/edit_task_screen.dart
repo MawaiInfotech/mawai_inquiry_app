@@ -2,62 +2,65 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:mawai_inquiry_app/bloc/department_list_bloc.dart';
-import 'package:mawai_inquiry_app/bloc/next_action_list_bloc.dart';
-import 'package:mawai_inquiry_app/bloc/save_task_bloc.dart';
 import 'package:mawai_inquiry_app/bloc/task_status_bloc.dart';
-import 'package:mawai_inquiry_app/model/employee_list_model.dart';
-import 'package:mawai_inquiry_app/model/next_action_list_model.dart';
-import 'package:mawai_inquiry_app/services/inquiry_service.dart';
-import 'package:mawai_inquiry_app/state/division_list_state.dart';
-import 'package:mawai_inquiry_app/state/next_action_list_state.dart';
-import 'package:mawai_inquiry_app/state/save_inquiry_state.dart';
 import 'package:provider/provider.dart';
 
+import '../bloc/department_list_bloc.dart';
 import '../bloc/employee_list_bloc.dart';
+import '../bloc/next_action_list_bloc.dart';
+import '../bloc/save_task_bloc.dart';
 import '../model/division_list_model.dart';
+import '../model/employee_list_model.dart';
+import '../model/next_action_list_model.dart';
+import '../model/task_list_model.dart';
+import '../services/inquiry_service.dart';
+import '../state/division_list_state.dart';
 import '../state/employee_list_state.dart';
+import '../state/next_action_list_state.dart';
+import '../state/save_inquiry_state.dart';
 import '../utils/snackbar_utils.dart';
 
-class AddTaskScreen extends StatefulWidget {
-  const AddTaskScreen({super.key});
+class EditTaskScreen extends StatefulWidget {
+
+  final TaskListModel task;
+  const EditTaskScreen({super.key, required this.task});
 
   @override
-  State<AddTaskScreen> createState() => _AddTaskScreenState();
+  State<EditTaskScreen> createState() => _EditTaskScreenState();
 }
 
-class _AddTaskScreenState extends State<AddTaskScreen> {
-  final _formKey1 = GlobalKey<FormState>();
+class _EditTaskScreenState extends State<EditTaskScreen> {
 
   final taskDetailsController = TextEditingController();
   final targetDateController = TextEditingController();
 
-  String? departmentCode = "101001";
-  String? departmentName = "SAP";
+  final _formKey2 = GlobalKey<FormState>();
 
-  String assignType = "SELF"; // SELF / OTHER
+  String? assignToCode;
+  String? criticalCode;
 
+  String assignType = "OTHER"; // SELF / OTHER
   String? targetDateApi;
 
-  /// Logged-in employee code
-  String? assignToCode = "SWE034";
 
-  //String? assignToCode;
-  String? criticalCode = "Y";
 
-  final statusController = TextEditingController(text: "Pending");
+  late final statusController = TextEditingController(text: widget.task.status);
 
   final criticalList = [
     {"code": "Y", "name": "Yes"},
     {"code": "N", "name": "No"},
   ];
 
-  // String? departmentCode;
-  // String? departmentName ;
+  String? departmentCode;
+  String? departmentName;
   String? nextAction;
   String? nextActionCode;
+  String? status;
+
   String? statusCode;
-  String? selectedStatus;
+
+
+
 
   late InquiryService inquiryService;
   late DepartmentListBloc departmentListBloc;
@@ -69,16 +72,41 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   @override
   void initState() {
     super.initState();
+
     inquiryService = Provider.of<InquiryService>(context, listen: false);
+
     departmentListBloc = DepartmentListBloc(inquiryService);
     departmentListBloc.init();
-    nextActionListBloc = NextActionListBloc(inquiryService);
-    nextActionListBloc.init();
+
     employeeListBloc = EmployeeListBloc(inquiryService);
-    employeeListBloc.init("101001");
+
     saveTaskBloc = SaveTaskBloc(inquiryService);
+
     taskStatusBloc = TaskStatusBloc(inquiryService);
     taskStatusBloc.init();
+
+    // Prefill
+    departmentCode = widget.task.department;
+    assignToCode = widget.task.assignTo;
+
+// If logged-in user then select SELF
+    if (assignToCode == "SWE034") {
+      assignType = "SELF";
+    } else {
+      assignType = "OTHER";
+    }
+    criticalCode = widget.task.criticalYN;
+
+    taskDetailsController.text = widget.task.taskDetail;
+    targetDateController.text = widget.task.targetDate;
+    statusCode = widget.task.status;
+    targetDateApi = widget.task.targetDate;
+
+    targetDateController.text = DateFormat('dd-MMM-yyyy').format(
+      DateFormat('yyyy-MM-dd').parse(widget.task.targetDate),
+    );
+
+    employeeListBloc.init(departmentCode!);
   }
 
   @override
@@ -87,16 +115,18 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       backgroundColor: const Color(0xffF4F6FA),
       appBar: AppBar(
         backgroundColor: const Color(0xff0A174B),
-        title: const Text("Add Task"),
+        title: const Text("Edit Task"),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(18),
         child: Form(
-          key: _formKey1,
+          key: _formKey2,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               /// Header Card
+
+
               const SizedBox(height: 10),
 
               Card(
@@ -138,7 +168,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                               onChanged: (value) {
                                 setState(() {
                                   assignType = value!;
-                                  assignToCode = "SWE034";
+                                  assignToCode = "SWE034"; // logged-in employee
                                 });
                               },
                             ),
@@ -166,10 +196,20 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       IgnorePointer(
                         ignoring: assignType == "SELF",
                         child: Opacity(
-                          opacity: assignType == "SELF" ? .5 : 1,
+                          opacity: assignType == "SELF" ? 0.5 : 1,
                           child: _buildEmployeeListBody(),
                         ),
                       ),
+
+                      const SizedBox(height: 8),
+
+                      // IgnorePointer(
+                      //   ignoring: assignType == "SELF",
+                      //   child: Opacity(
+                      //     opacity: assignType == "SELF" ? .5 : 1,
+                      //     child: _buildEmployeeListBody(),
+                      //   ),
+                      // ),
 
                       const SizedBox(height: 15),
 
@@ -184,7 +224,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       const SizedBox(height: 15),
 
                       fieldTitle("Status"),
-                      _buildStatusBody(),
+                      _buildStatusBody()
                     ],
                   ),
                 ),
@@ -192,7 +232,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
               const SizedBox(height: 30),
 
-              buildSubmitContainer(),
+              buildSubmitContainer()
             ],
           ),
         ),
@@ -243,13 +283,18 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         if (departmentCode != null) {
           employeeListBloc.init(departmentCode!);
         }
+
+        if (departmentCode != null) {
+          employeeListBloc.init(departmentCode!);
+        }
       },
 
-      validator: (value) => value == null ? "Select Department" : null,
+      validator: (value) =>
+      value == null ? "Select Division" : null,
 
       decoratorProps: DropDownDecoratorProps(
         decoration: InputDecoration(
-          hintText: "Select Department",
+          hintText: "Select Division",
           prefixIcon: const Icon(
             Icons.category_outlined,
             color: Color(0xff0A174B),
@@ -262,7 +307,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           ),
           focusedBorder: const OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: Color(0xff0A174B), width: 1.8),
+            borderSide: BorderSide(
+              color: Color(0xff0A174B),
+              width: 1.8,
+            ),
           ),
         ),
       ),
@@ -272,7 +320,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
         searchFieldProps: const TextFieldProps(
           decoration: InputDecoration(
-            hintText: "Search Department",
+            hintText: "Search Division",
             prefixIcon: Icon(Icons.search),
           ),
         ),
@@ -307,7 +355,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   }
 
   Widget _buildEmployeeLoading(List<EmployeeListModel> model) {
-    return const Center(child: CircularProgressIndicator());
+    return const Center(
+      child: CircularProgressIndicator(),
+    );
   }
 
   Widget _buildEmployeeContent(List<EmployeeListModel> model) {
@@ -321,7 +371,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           : null,
 
       itemAsString: (item) =>
-          "${item.firstName} ${item.lastName} (${item.empCode})",
+      "${item.firstName} ${item.lastName} (${item.empCode})",
 
       onChanged: (value) {
         setState(() {
@@ -329,7 +379,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         });
       },
 
-      validator: (value) => value == null ? "Select Employee" : null,
+      validator: (value) =>
+      value == null ? "Select Employee" : null,
 
       decoratorProps: DropDownDecoratorProps(
         decoration: InputDecoration(
@@ -340,20 +391,20 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           ),
           filled: true,
           fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       ),
 
       popupProps: PopupProps.menu(
         showSearchBox: true,
-
         searchFieldProps: const TextFieldProps(
           decoration: InputDecoration(
             hintText: "Search Employee",
             prefixIcon: Icon(Icons.search),
           ),
         ),
-
         itemBuilder: (context, item, isDisabled, isSelected) {
           return ListTile(
             title: Text("${item.firstName} ${item.lastName}"),
@@ -364,55 +415,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     );
   }
 
-  /// Status drop down
-
-  Widget _buildStatusBody() {
-    return BlocConsumer<TaskStatusBloc, NextActionListState>(
-      bloc: taskStatusBloc,
-      listener: (_, state) {},
-      builder: (_, state) {
-        return state.when(
-          loading: (_) => const Center(child: CircularProgressIndicator()),
-          content: _buildStatusDropdown,
-          success: _buildStatusDropdown,
-          failed: (list, _) => _buildStatusDropdown(list),
-        );
-      },
-    );
-  }
-
-  Widget _buildStatusDropdown(List<NextActionListModel> model) {
-    // Select first item only once
-    if (statusCode == null && model.isNotEmpty) {
-      statusCode = model.first.controlCode;
-    }
-
-    return DropdownButtonFormField<String>(
-      value: statusCode,
-      decoration: InputDecoration(
-        hintText: "Select Status",
-        prefixIcon: const Icon(
-          Icons.pending_actions_outlined,
-          color: Color(0xff0A174B),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-      items: model.map((e) {
-        return DropdownMenuItem<String>(
-          value: e.controlCode,
-          child: Text(e.controlName),
-        );
-      }).toList(),
-      validator: (v) => v == null ? "Select Status" : null,
-      onChanged: (value) {
-        setState(() {
-          statusCode = value;
-        });
-      },
-    );
-  }
 
   Widget _buildDateField() {
     return TextFormField(
@@ -427,7 +429,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         ),
         filled: true,
         fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
       onTap: () async {
         final date = await showDatePicker(
@@ -438,11 +442,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         );
 
         if (date != null) {
-          // API format
           targetDateApi = DateFormat('yyyy-MM-dd').format(date);
-
-          // Display format
-          targetDateController.text = DateFormat('dd-MMM-yyyy').format(date);
+          targetDateController.text =
+              DateFormat('dd-MMM-yyyy').format(date);
         }
       },
     );
@@ -453,13 +455,21 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       value: criticalCode,
       decoration: InputDecoration(
         hintText: "Select Critical",
-        prefixIcon: const Icon(Icons.priority_high, color: Color(0xff0A174B)),
+        prefixIcon: const Icon(
+          Icons.priority_high,
+          color: Color(0xff0A174B),
+        ),
         filled: true,
         fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
       items: criticalList.map((e) {
-        return DropdownMenuItem(value: e["code"], child: Text(e["name"]!));
+        return DropdownMenuItem(
+          value: e["code"],
+          child: Text(e["name"]!),
+        );
       }).toList(),
       validator: (v) => v == null ? "Select Critical" : null,
       onChanged: (v) {
@@ -469,6 +479,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       },
     );
   }
+
+
 
   Widget fieldTitle(String title) {
     return Padding(
@@ -484,6 +496,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 color: Color(0xff0A174B),
               ),
             ),
+
           ],
         ),
       ),
@@ -525,34 +538,89 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   }
 
 
-  Widget buildSubmitContainer() {
-    return BlocConsumer<SaveTaskBloc, SaveInquiryState>(
-      bloc: saveTaskBloc,
-      listener: (_, state) {
-        state.maybeWhen(
-          success: (_, message) {
-            SnackBarUtils.show(context, message: message ?? "Success 🎉");
-            Navigator.pop(context, true);
-          },
-          failed: (_, message) {
-            SnackBarUtils.show(context, message: message, isSuccess: false);
-          },
-          orElse: () {},
+  Widget _buildStatusBody() {
+    return BlocConsumer<TaskStatusBloc, NextActionListState>(
+      bloc: taskStatusBloc,
+      listener: (_, state) {},
+      builder: (_, state) {
+        return state.when(
+          loading: (_) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+          content: _buildStatusDropdown,
+          success: _buildStatusDropdown,
+          failed: (list, _) => _buildStatusDropdown(list),
         );
       },
-      builder: (context, state) {
-        return state.maybeWhen(
-          loading: (_) {
-            return const Center(child: CircularProgressIndicator());
-          },
-          orElse: () {
+    );
+  }
+
+  Widget _buildStatusDropdown(List<NextActionListModel> model) {
+    if (statusCode == null && model.isNotEmpty) {
+      statusCode = model.first.controlCode;
+    }
+
+    return DropdownButtonFormField<String>(
+      value: statusCode,
+      decoration: InputDecoration(
+        hintText: "Select Status",
+        prefixIcon: const Icon(
+          Icons.pending_actions_outlined,
+          color: Color(0xff0A174B),
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+      items: model.map((e) {
+        return DropdownMenuItem<String>(
+          value: e.controlCode,
+          child: Text(e.controlName),
+        );
+      }).toList(),
+      validator: (v) => v == null ? "Select Status" : null,
+      onChanged: (value) {
+        setState(() {
+          statusCode = value;
+        });
+      },
+    );
+  }
+
+  Widget buildSubmitContainer() {
+    return BlocConsumer<SaveTaskBloc, SaveInquiryState>(
+        bloc: saveTaskBloc,
+        listener: (_, state) {
+          state.maybeWhen(
+              success: (_, message) {
+                SnackBarUtils.show(
+                  context,
+                  message: message ?? "Success 🎉",
+                );
+                Navigator.pop(context, true);
+              },
+              failed: (_, message) {
+                SnackBarUtils.show(
+                  context,
+                  message: message,
+                  isSuccess: false,
+                );
+              },
+              orElse: () {});
+        },
+        builder: (context, state) {
+          return state.maybeWhen(loading: (_) {
+            return  const Center(child: CircularProgressIndicator());
+          }, orElse: () {
             return SizedBox(
               height: 54,
               width: double.infinity,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.send_rounded, color: Colors.white),
                 label: const Text(
-                  "SUBMIT TASK",
+                  "EDIT TASK DETAILS",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
@@ -568,21 +636,11 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ),
                 onPressed: () async {
-                  await saveTaskBloc.init(
-                    "",
-                    departmentCode!,
-                    taskDetailsController.text,
-                    assignToCode!,
-                    targetDateApi!,
-                    criticalCode!,
-                    statusCode!,
-                  );
+                  await saveTaskBloc.init(widget.task.taskId.toString(), departmentCode!, taskDetailsController.text, assignToCode!, targetDateApi ?? widget.task.targetDate, criticalCode!, statusCode!);
                 },
               ),
             );
-          },
-        );
-      },
-    );
+          });
+        });
   }
 }

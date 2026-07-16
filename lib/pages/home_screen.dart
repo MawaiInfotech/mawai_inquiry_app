@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mawai_inquiry_app/pages/task_screen.dart';
+import 'package:mawai_inquiry_app/utils/common_apbar.dart';
 
 import 'inquiry_screen.dart';
 
@@ -11,16 +12,16 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xffF5F7FB),
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: const Color(0xff0A174B),
+        backgroundColor: Colors.white,
+        elevation: 1,
         centerTitle: true,
-        title: const Text(
-          "Mawai Inquiry",
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-          ),
+        automaticallyImplyLeading: true,
+        iconTheme: const IconThemeData(
+          color: Color(0xff0A174B),
+        ),
+        title: Image.asset(
+          "assets/images/mawai_logo.png",
+          scale: 8,
         ),
       ),
       body: Padding(
@@ -29,8 +30,8 @@ class HomeScreen extends StatelessWidget {
           children: [
             _buildCard(
               context,
-              title: "Inquiry",
-              subtitle: "Create & Manage Customer Inquiries",
+              title: "Enquiry",
+              subtitle: "Create & Manage Customer Enquiries",
               icon: Icons.support_agent_rounded,
               color: Colors.blue,
               onTap: () {

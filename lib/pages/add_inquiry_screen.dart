@@ -35,9 +35,6 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
   String? nextAction;
   String? nextActionCode;
 
-  final divisions = ["Electrical", "Automobile", "Industrial", "Electronics"];
-
-  final actions = ["Call", "Visit", "Meeting", "Follow-up", "Quotation"];
 
   late InquiryService inquiryService;
   late DivisionListBloc divisionListBloc;
@@ -61,7 +58,7 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
       backgroundColor: const Color(0xffF4F6FA),
       appBar: AppBar(
         backgroundColor: const Color(0xff0A174B),
-        title: const Text("Add Inquiry"),
+        title: const Text("Add Enquiry"),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(18),
@@ -175,14 +172,21 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
   }
 
   Widget _buildDivisionListContent(List<DivisionListModel> model) {
+
+    // Select first item only once
+    if (divisionCode == null && model.isNotEmpty) {
+      divisionCode = model.first.code;
+    }
+
     return DropdownSearch<DivisionListModel>(
       compareFn: (item1, item2) => item1.code == item2.code,
 
       items: (filter, infiniteScrollProps) => model,
 
-      selectedItem: model.where((e) => e.code == divisionCode).isNotEmpty
-          ? model.firstWhere((e) => e.code == divisionCode)
-          : null,
+      selectedItem: model.firstWhere(
+            (e) => e.code == divisionCode,
+        orElse: () => model.first,
+      ),
 
       itemAsString: (item) => item.description,
 
@@ -206,7 +210,7 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
           fillColor: Colors.white,
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Colors.grey),
+            borderSide: const BorderSide(color: Colors.grey),
           ),
           focusedBorder: const OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -220,24 +224,13 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
 
       popupProps: PopupProps.menu(
         showSearchBox: true,
-
+        constraints: const BoxConstraints(maxHeight: 180),
         searchFieldProps: const TextFieldProps(
           decoration: InputDecoration(
             hintText: "Search Division",
             prefixIcon: Icon(Icons.search),
           ),
         ),
-
-        itemBuilder: (context, item, isDisabled, isSelected) {
-          return ListTile(
-            dense: true,
-            title: Text(
-              item.description,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          );
-        },
       ),
     );
   }
@@ -346,10 +339,7 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
                 color: Color(0xff0A174B),
               ),
             ),
-            const TextSpan(
-              text: " *",
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-            ),
+
           ],
         ),
       ),
@@ -453,7 +443,7 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.send_rounded, color: Colors.white),
                 label: const Text(
-                  "SUBMIT INQUIRY",
+                  "SUBMIT ENQUIRY",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,

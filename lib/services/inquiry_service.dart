@@ -63,6 +63,22 @@ class InquiryService {
     return [];
   }
 
+  Future<List<NextActionListModel>> getTaskStatusList() async {
+    const url = '${root}status-list';
+
+    try {
+      final response = await http.get(Uri.parse(url), headers: headers);
+      final responseBody = json.decode(response.body);
+      if (responseBody['status'] == true) {
+        final itemList = responseBody['result'] as List;
+        return itemList.map((e) => NextActionListModel.fromJson(e)).toList();
+      }
+    } catch (e) {
+      _handleError(e);
+    }
+    return [];
+  }
+
   Future<String?> saveInquiry(
     String divCode,
     String custName,
@@ -153,6 +169,7 @@ class InquiryService {
   }
 
   Future<String?> saveTask(
+      String taskId,
       String dept,
       String taskDetail,
       String assignTo,
@@ -160,10 +177,11 @@ class InquiryService {
       String criticalYn,
       String status,
 
+
       ) async {
     const url = "${root}task-save";
     final body = {
-
+      "task_id": taskId,
       "dept":dept,
       "task_detail":taskDetail,
       "assign_to" :assignTo,
@@ -171,6 +189,7 @@ class InquiryService {
       "critical_yn":criticalYn,
       "status":status,
     };
+    print(body);
     final response = await http.post(
       Uri.parse(url),
       body: json.encode(body),

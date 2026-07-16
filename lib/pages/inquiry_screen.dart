@@ -44,8 +44,18 @@ class _InquiryScreenState extends State<InquiryScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        backgroundColor: const Color(0xff0A174B),
-        title: const Text("Inquiry List"),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        centerTitle: true,
+        automaticallyImplyLeading: true,
+        iconTheme: const IconThemeData(
+          color: Color(0xff0A174B),
+        ),
+        title: Image.asset(
+          "assets/images/mawai_logo.png",
+          scale: 8,
+
+        ),
       ),
       body: Column(
         children: [
@@ -63,7 +73,7 @@ class _InquiryScreenState extends State<InquiryScreen> {
                   ),
                   icon: const Icon(Icons.add, color: Colors.white),
                   label: const Text(
-                    "Add Inquiry",
+                    "Add Enquiry",
                     style: TextStyle(
                       fontSize: 17,
                       color: Colors.white,
@@ -181,7 +191,9 @@ class _InquiryScreenState extends State<InquiryScreen> {
       filteredInquiryData = inquiryData.where((item) {
         final search = searchController.text.toLowerCase();
 
-        return item.getDivision!.description.toLowerCase().contains(search) ||
+        return (item.getDivision?.description ?? "")
+            .toLowerCase()
+            .contains(search) ||
             item.customerName.toLowerCase().contains(search) ||
             item.contactPerson.toLowerCase().contains(search) ||
             item.mobile.toLowerCase().contains(search) ||
@@ -259,7 +271,7 @@ class _InquiryScreenState extends State<InquiryScreen> {
                           ),
                           children: [
                             cell("${index + 1}", center: true),
-                            cell(item.getDivision!.description),
+                            cell(item.division),
                             cell(item.customerName),
                             cell(item.contactPerson),
                             cell(item.mobile),

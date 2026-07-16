@@ -11,6 +11,7 @@ class SaveTaskBloc extends Cubit<SaveInquiryState>{
   InquiryService inquiryService;
 
   Future<void> init(
+      String taskId,
       String dept,
       String taskDetail,
       String assignTo,
@@ -20,7 +21,7 @@ class SaveTaskBloc extends Cubit<SaveInquiryState>{
       )async{
     try{
       emit(SaveInquiryState.loading(state.saveInquiryModel));
-      final message = await inquiryService.saveTask(dept, taskDetail, assignTo, targetDt, criticalYn, status);
+      final message = await inquiryService.saveTask(taskId, dept, taskDetail, assignTo, targetDt, criticalYn, status);
       emit(SaveInquiryState.success(state.saveInquiryModel, message));
     }on ApiError catch(error){
       emit(SaveInquiryState.failed(state.saveInquiryModel,  error.message));
