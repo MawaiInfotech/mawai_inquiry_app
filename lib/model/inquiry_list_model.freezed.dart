@@ -38,6 +38,8 @@ mixin _$InquiryListModel {
   String get remark => throw _privateConstructorUsedError;
   @JsonKey(name: "next_action")
   String get nextAction => throw _privateConstructorUsedError;
+  @JsonKey(name: "status")
+  String get status => throw _privateConstructorUsedError;
   @JsonKey(name: "get_division")
   DivisionDetailsModel? get getDivision => throw _privateConstructorUsedError;
 
@@ -63,6 +65,7 @@ abstract class $InquiryListModelCopyWith<$Res> {
       @JsonKey(name: "emailid") String email,
       @JsonKey(name: "remarks") String remark,
       @JsonKey(name: "next_action") String nextAction,
+      @JsonKey(name: "status") String status,
       @JsonKey(name: "get_division") DivisionDetailsModel? getDivision});
 
   $DivisionDetailsModelCopyWith<$Res>? get getDivision;
@@ -90,6 +93,7 @@ class _$InquiryListModelCopyWithImpl<$Res, $Val extends InquiryListModel>
     Object? email = null,
     Object? remark = null,
     Object? nextAction = null,
+    Object? status = null,
     Object? getDivision = freezed,
   }) {
     return _then(_value.copyWith(
@@ -129,6 +133,10 @@ class _$InquiryListModelCopyWithImpl<$Res, $Val extends InquiryListModel>
           ? _value.nextAction
           : nextAction // ignore: cast_nullable_to_non_nullable
               as String,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as String,
       getDivision: freezed == getDivision
           ? _value.getDivision
           : getDivision // ignore: cast_nullable_to_non_nullable
@@ -167,6 +175,7 @@ abstract class _$$InquiryListModelImplCopyWith<$Res>
       @JsonKey(name: "emailid") String email,
       @JsonKey(name: "remarks") String remark,
       @JsonKey(name: "next_action") String nextAction,
+      @JsonKey(name: "status") String status,
       @JsonKey(name: "get_division") DivisionDetailsModel? getDivision});
 
   @override
@@ -193,6 +202,7 @@ class __$$InquiryListModelImplCopyWithImpl<$Res>
     Object? email = null,
     Object? remark = null,
     Object? nextAction = null,
+    Object? status = null,
     Object? getDivision = freezed,
   }) {
     return _then(_$InquiryListModelImpl(
@@ -232,6 +242,10 @@ class __$$InquiryListModelImplCopyWithImpl<$Res>
           ? _value.nextAction
           : nextAction // ignore: cast_nullable_to_non_nullable
               as String,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as String,
       getDivision: freezed == getDivision
           ? _value.getDivision
           : getDivision // ignore: cast_nullable_to_non_nullable
@@ -253,6 +267,7 @@ class _$InquiryListModelImpl implements _InquiryListModel {
       @JsonKey(name: "emailid") this.email = "",
       @JsonKey(name: "remarks") this.remark = "",
       @JsonKey(name: "next_action") this.nextAction = "",
+      @JsonKey(name: "status") this.status = "",
       @JsonKey(name: "get_division") this.getDivision});
 
   factory _$InquiryListModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -286,12 +301,15 @@ class _$InquiryListModelImpl implements _InquiryListModel {
   @JsonKey(name: "next_action")
   final String nextAction;
   @override
+  @JsonKey(name: "status")
+  final String status;
+  @override
   @JsonKey(name: "get_division")
   final DivisionDetailsModel? getDivision;
 
   @override
   String toString() {
-    return 'InquiryListModel(inqNo: $inqNo, inqDate: $inqDate, division: $division, customerName: $customerName, contactPerson: $contactPerson, mobile: $mobile, email: $email, remark: $remark, nextAction: $nextAction, getDivision: $getDivision)';
+    return 'InquiryListModel(inqNo: $inqNo, inqDate: $inqDate, division: $division, customerName: $customerName, contactPerson: $contactPerson, mobile: $mobile, email: $email, remark: $remark, nextAction: $nextAction, status: $status, getDivision: $getDivision)';
   }
 
   @override
@@ -312,6 +330,7 @@ class _$InquiryListModelImpl implements _InquiryListModel {
             (identical(other.remark, remark) || other.remark == remark) &&
             (identical(other.nextAction, nextAction) ||
                 other.nextAction == nextAction) &&
+            (identical(other.status, status) || other.status == status) &&
             (identical(other.getDivision, getDivision) ||
                 other.getDivision == getDivision));
   }
@@ -329,6 +348,7 @@ class _$InquiryListModelImpl implements _InquiryListModel {
       email,
       remark,
       nextAction,
+      status,
       getDivision);
 
   @JsonKey(ignore: true)
@@ -357,6 +377,7 @@ abstract class _InquiryListModel implements InquiryListModel {
       @JsonKey(name: "emailid") final String email,
       @JsonKey(name: "remarks") final String remark,
       @JsonKey(name: "next_action") final String nextAction,
+      @JsonKey(name: "status") final String status,
       @JsonKey(name: "get_division")
       final DivisionDetailsModel? getDivision}) = _$InquiryListModelImpl;
 
@@ -390,6 +411,9 @@ abstract class _InquiryListModel implements InquiryListModel {
   @override
   @JsonKey(name: "next_action")
   String get nextAction;
+  @override
+  @JsonKey(name: "status")
+  String get status;
   @override
   @JsonKey(name: "get_division")
   DivisionDetailsModel? get getDivision;

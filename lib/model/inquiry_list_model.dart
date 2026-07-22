@@ -17,6 +17,7 @@ class InquiryListModel with _$InquiryListModel{
     @JsonKey(name: "emailid") @Default("") String email,
     @JsonKey(name: "remarks") @Default("") String remark,
     @JsonKey(name: "next_action") @Default("") String nextAction,
+    @JsonKey(name: "status") @Default("") String status,
     @JsonKey(name: "get_division") DivisionDetailsModel? getDivision,
   }) = _InquiryListModel;
 

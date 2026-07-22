@@ -80,6 +80,7 @@ class InquiryService {
   }
 
   Future<String?> saveInquiry(
+      String enqNo,
     String divCode,
     String custName,
     String contactPerson,
@@ -87,26 +88,30 @@ class InquiryService {
     String email,
       String remarks,
       String nextAction,
+      String status,
 
   ) async {
     const url = "${root}inquiry-save";
     final body = {
-
+      "enq_no": enqNo,
       "division":divCode,
       "customer_name":custName,
       "contact_person" :contactPerson,
       "mobile_no" : mobile,
       "emailid":email,
       "remarks":remarks,
-      "next_action" : nextAction
+      "next_action" : nextAction,
+      "status":status
     };
     final response = await http.post(
       Uri.parse(url),
       body: json.encode(body),
       headers: headers,
     );
+
     try {
       final responseBody = json.decode(response.body);
+
       if (responseBody["status"] == true) {
         return responseBody["message"];
       } else {
@@ -118,8 +123,8 @@ class InquiryService {
     return null;
   }
 
-  Future<List<InquiryListModel>> getInquiryList() async {
-    const url = '${root}inquiry-list';
+  Future<List<InquiryListModel>> getInquiryList(String status) async {
+    final url = '${root}inquiry-list?status=$status';
 
     try {
       final response = await http.get(Uri.parse(url), headers: headers);
@@ -134,8 +139,8 @@ class InquiryService {
     return [];
   }
 
-  Future<List<TaskListModel>> getTaskList() async {
-    const url = '${root}task-list';
+  Future<List<TaskListModel>> getTaskList(String status) async {
+    final url = '${root}task-list?status=$status';
 
     try {
       final response = await http.get(Uri.parse(url), headers: headers);

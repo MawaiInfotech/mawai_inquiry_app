@@ -23,6 +23,7 @@ class TaskScreen extends StatefulWidget {
 
 class _TaskScreenState extends State<TaskScreen> {
 
+  String selectedStatus = "Pending";
 
   final TextEditingController searchController = TextEditingController();
 
@@ -38,7 +39,7 @@ class _TaskScreenState extends State<TaskScreen> {
     super.initState();
     inquiryService = Provider.of<InquiryService>(context, listen: false);
     taskListBloc = TaskListBloc(inquiryService);
-    taskListBloc.init();
+    taskListBloc.init(selectedStatus);
   }
 
   String formatDate(String date) {
@@ -105,7 +106,7 @@ class _TaskScreenState extends State<TaskScreen> {
                 );
 
                 if (result == true) {
-                  taskListBloc.init();
+                  taskListBloc.init(selectedStatus);
                 }
 
                 // Reload inquiry list/API here if needed
@@ -115,6 +116,12 @@ class _TaskScreenState extends State<TaskScreen> {
 
 
           const SizedBox(height: 10),
+
+          _buildStatusButtons(),
+
+          const SizedBox(height: 10),
+
+          /// Search
 
           /// Search
           TextField(
@@ -279,7 +286,7 @@ class _TaskScreenState extends State<TaskScreen> {
                                 : const Color(0xffF8FAFC),
                           ),
                           children: [
-                            Padding(
+                            item.status == "Pending"?Padding(
                               padding: const EdgeInsets.all(4),
                               child: IconButton(
                                 icon: const Icon(
@@ -295,11 +302,11 @@ class _TaskScreenState extends State<TaskScreen> {
                                   );
 
                                   if (result == true) {
-                                    taskListBloc.init();
+                                    taskListBloc.init("Pending");
                                   }
                                 },
                               ),
-                            ),
+                            ):Container(),
                             cell("${index + 1}", center: true),
                             cell(item.getDepartment!.name),
                             cell(formatDate(item.taskDate)),
@@ -347,6 +354,115 @@ class _TaskScreenState extends State<TaskScreen> {
         textAlign: center ? TextAlign.center : TextAlign.start,
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(fontSize: 12, color: Color(0xff374151)),
+      ),
+    );
+  }
+
+  Widget _buildStatusButtons() {
+    final List<Map<String, dynamic>> statuses = [
+      {
+        "title": "All",
+        "value": "",
+        "color": Colors.blueGrey,
+        "icon": Icons.apps_rounded,
+      },
+      {
+        "title": "Pending",
+        "value": "Pending",
+        "color": Colors.orange,
+        "icon": Icons.schedule_rounded,
+      },
+      {
+        "title": "Completed",
+        "value": "Completed",
+        "color": Colors.green,
+        "icon": Icons.check_circle_rounded,
+      },
+      {
+        "title": "Hold",
+        "value": "Hold",
+        "color": Colors.redAccent,
+        "icon": Icons.pause_circle_rounded,
+      },
+    ];
+
+    return SizedBox(
+      height: 38,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        itemCount: statuses.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (_, index) {
+          final item = statuses[index];
+          final Color color = item["color"] as Color;
+          final bool selected = selectedStatus == item["value"];
+
+          return InkWell(
+            borderRadius: BorderRadius.circular(30),
+            onTap: () {
+              setState(() {
+                selectedStatus = item["value"];
+              });
+
+              taskListBloc.init(item["value"]);
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 5,
+              ),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                gradient: selected
+                    ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    color,
+                    color.withOpacity(.75),
+                  ],
+                )
+                    : null,
+                color: selected ? null : Colors.white,
+                border: Border.all(
+                  color: color.withOpacity(.45),
+                  width: 1.2,
+                ),
+                boxShadow: selected
+                    ? [
+                  BoxShadow(
+                    color: color.withOpacity(.30),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+                    : [],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    item["icon"],
+                    size: 12,
+                    color: selected ? Colors.white : color,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    item["title"],
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: selected ? Colors.white : color,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

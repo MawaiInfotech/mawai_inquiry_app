@@ -8,10 +8,10 @@ import '../error/api_error.dart';
   TaskListBloc(this.inquiryService,) : super(TaskListState.initial());
 
   InquiryService inquiryService;
-  Future<void> init()async{
+  Future<void> init(String status)async{
     emit(TaskListState.loading(state.taskListModel));
     try{
-      final taskList = await inquiryService.getTaskList();
+      final taskList = await inquiryService.getTaskList(status);
       emit(TaskListState.content(taskList));
     }on ApiError catch(error){
       emit(TaskListState.failed(state.taskListModel,  error.message));

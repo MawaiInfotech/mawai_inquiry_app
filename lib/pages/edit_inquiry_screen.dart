@@ -1,28 +1,34 @@
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mawai_inquiry_app/bloc/division_list_bloc.dart';
-import 'package:mawai_inquiry_app/bloc/next_action_list_bloc.dart';
-import 'package:mawai_inquiry_app/bloc/save_inquiry_bloc.dart';
-import 'package:mawai_inquiry_app/services/inquiry_service.dart';
-import 'package:mawai_inquiry_app/state/division_list_state.dart';
-import 'package:mawai_inquiry_app/state/save_inquiry_state.dart';
 import 'package:provider/provider.dart';
 
+import '../bloc/division_list_bloc.dart';
+import '../bloc/next_action_list_bloc.dart';
+import '../bloc/save_inquiry_bloc.dart';
 import '../bloc/task_status_bloc.dart';
 import '../model/division_list_model.dart';
+import '../model/inquiry_list_model.dart';
 import '../model/next_action_list_model.dart';
+import '../services/inquiry_service.dart';
+import '../state/division_list_state.dart';
 import '../state/next_action_list_state.dart';
+import '../state/save_inquiry_state.dart';
 import '../utils/snackbar_utils.dart';
 
-class AddInquiryScreen extends StatefulWidget {
-  const AddInquiryScreen({super.key});
+class EditInquiryScreen extends StatefulWidget {
+  final InquiryListModel inquiry;
+
+  const EditInquiryScreen({
+    super.key,
+    required this.inquiry,
+  });
 
   @override
-  State<AddInquiryScreen> createState() => _AddInquiryScreenState();
+  State<EditInquiryScreen> createState() => _EditInquiryScreenState();
 }
 
-class _AddInquiryScreenState extends State<AddInquiryScreen> {
+class _EditInquiryScreenState extends State<EditInquiryScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final customerController = TextEditingController();
@@ -30,16 +36,13 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
   final mobileController = TextEditingController();
   final emailController = TextEditingController();
   final remarkController = TextEditingController();
-  final statusController = TextEditingController(text: "Pending");
 
-  String? division;
   String? divisionCode;
-  String? nextAction;
   String? nextActionCode;
   String? statusCode;
-  String? selectedStatus;
 
   late InquiryService inquiryService;
+
   late DivisionListBloc divisionListBloc;
   late NextActionListBloc nextActionListBloc;
   late SaveInquiryBloc saveInquiryBloc;
@@ -48,14 +51,39 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
   @override
   void initState() {
     super.initState();
+
     inquiryService = Provider.of<InquiryService>(context, listen: false);
+
     divisionListBloc = DivisionListBloc(inquiryService);
-    divisionListBloc.init();
     nextActionListBloc = NextActionListBloc(inquiryService);
-    nextActionListBloc.init();
-    saveInquiryBloc = SaveInquiryBloc(inquiryService);
     taskStatusBloc = TaskStatusBloc(inquiryService);
+    saveInquiryBloc = SaveInquiryBloc(inquiryService);
+    divisionListBloc.init();
+    nextActionListBloc.init();
     taskStatusBloc.init();
+
+    /// Fill Existing Data
+    customerController.text = widget.inquiry.customerName;
+    contactController.text = widget.inquiry.contactPerson;
+    mobileController.text = widget.inquiry.mobile;
+    emailController.text = widget.inquiry.email;
+    remarkController.text = widget.inquiry.remark;
+
+    /// Codes (must exist in model)
+    divisionCode = widget.inquiry.division;
+    nextActionCode = widget.inquiry.nextAction;
+    statusCode = widget.inquiry.status.isEmpty ? "Pending" : widget.inquiry.status;
+  }
+
+  @override
+  void dispose() {
+    customerController.dispose();
+    contactController.dispose();
+    mobileController.dispose();
+    emailController.dispose();
+    remarkController.dispose();
+
+    super.dispose();
   }
 
   @override
@@ -64,17 +92,21 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
       backgroundColor: const Color(0xffF4F6FA),
       appBar: AppBar(
         backgroundColor: const Color(0xff0A174B),
-        title: const Text("Add Enquiry"),
+        elevation: 0,
+        title: const Text(
+          "Edit Enquiry",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(18),
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// Header Card
-              const SizedBox(height: 10),
 
               Card(
                 elevation: 2,
@@ -86,11 +118,11 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      fieldTitle("Division"),
 
+                      fieldTitle("Division"),
                       _buildDivisionListBody(),
 
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
 
                       fieldTitle("Customer"),
                       _textField(
@@ -99,7 +131,7 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
                         icon: Icons.business_outlined,
                       ),
 
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
 
                       fieldTitle("Contact Person"),
                       _textField(
@@ -108,7 +140,7 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
                         icon: Icons.person_outline,
                       ),
 
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
 
                       fieldTitle("Mobile Number"),
                       _textField(
@@ -118,7 +150,7 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
                         icon: Icons.phone_outlined,
                       ),
 
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
 
                       fieldTitle("Email"),
                       _textField(
@@ -128,31 +160,33 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
                         icon: Icons.email_outlined,
                       ),
 
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
 
                       fieldTitle("Remark"),
                       _textField(
                         controller: remarkController,
                         label: "Remark",
-                        icon: Icons.sticky_note_2_outlined,
+                        icon: Icons.notes_outlined,
                         maxLines: 3,
                       ),
 
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
+
                       fieldTitle("Next Action"),
                       _buildNextActionListBody(),
 
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
+
                       fieldTitle("Status"),
                       _buildStatusBody(),
+
+                      const SizedBox(height: 30),
+
+                      buildSubmitContainer(),
                     ],
                   ),
                 ),
               ),
-
-              const SizedBox(height: 30),
-
-              buildSubmitContainer(),
             ],
           ),
         ),
@@ -191,7 +225,7 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
       items: (filter, infiniteScrollProps) => model,
 
       selectedItem: model.firstWhere(
-        (e) => e.code == divisionCode,
+            (e) => e.code == divisionCode,
         orElse: () => model.first,
       ),
 
@@ -264,7 +298,7 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
       items: (filter, infiniteScrollProps) => model,
 
       selectedItem:
-          model.where((e) => e.controlCode == nextActionCode).isNotEmpty
+      model.where((e) => e.controlCode == nextActionCode).isNotEmpty
           ? model.firstWhere((e) => e.controlCode == nextActionCode)
           : null,
 
@@ -467,7 +501,7 @@ class _AddInquiryScreenState extends State<AddInquiryScreen> {
                 ),
                 onPressed: () async {
                   await saveInquiryBloc.init(
-                    "",
+                    widget.inquiry.inqNo.toString(),
                     divisionCode!,
                     customerController.text,
                     contactController.text,

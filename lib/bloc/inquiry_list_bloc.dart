@@ -8,10 +8,10 @@ class InquiryListBloc extends Cubit<InquiryListState>{
   InquiryListBloc(this.inquiryService,) : super(InquiryListState.initial());
 
   InquiryService inquiryService;
-  Future<void> init()async{
+  Future<void> init(String status)async{
     emit(InquiryListState.loading(state.inquiryListModel));
     try{
-      final inquiryList = await inquiryService.getInquiryList();
+      final inquiryList = await inquiryService.getInquiryList(status);
       emit(InquiryListState.content(inquiryList));
     }on ApiError catch(error){
       emit(InquiryListState.failed(state.inquiryListModel,  error.message));

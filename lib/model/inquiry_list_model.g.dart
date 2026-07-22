@@ -18,6 +18,7 @@ _$InquiryListModelImpl _$$InquiryListModelImplFromJson(
       email: json['emailid'] as String? ?? "",
       remark: json['remarks'] as String? ?? "",
       nextAction: json['next_action'] as String? ?? "",
+      status: json['status'] as String? ?? "",
       getDivision: json['get_division'] == null
           ? null
           : DivisionDetailsModel.fromJson(
@@ -36,5 +37,6 @@ Map<String, dynamic> _$$InquiryListModelImplToJson(
       'emailid': instance.email,
       'remarks': instance.remark,
       'next_action': instance.nextAction,
+      'status': instance.status,
       'get_division': instance.getDivision,
     };

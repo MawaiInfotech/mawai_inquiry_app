@@ -10,16 +10,19 @@ class SaveInquiryBloc extends Cubit<SaveInquiryState>{
 
   InquiryService inquiryService;
 
-  Future<void> init( String divCode,
+  Future<void> init(
+      String enqNo,
+      String divCode,
       String custName,
       String contactPerson,
       String mobile,
       String email,
       String remarks,
-      String nextAction,)async{
+      String nextAction,
+      String status)async{
     try{
       emit(SaveInquiryState.loading(state.saveInquiryModel));
-      final message = await inquiryService.saveInquiry(divCode, custName, contactPerson, mobile, email, remarks, nextAction);
+      final message = await inquiryService.saveInquiry(enqNo,divCode, custName, contactPerson, mobile, email, remarks, nextAction, status);
       emit(SaveInquiryState.success(state.saveInquiryModel, message));
     }on ApiError catch(error){
       emit(SaveInquiryState.failed(state.saveInquiryModel,  error.message));

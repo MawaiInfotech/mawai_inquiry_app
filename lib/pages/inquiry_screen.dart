@@ -7,6 +7,7 @@ import '../model/inquiry_list_model.dart';
 import '../services/inquiry_service.dart';
 import '../state/inquiry_list_state.dart';
 import 'add_inquiry_screen.dart';
+import 'edit_inquiry_screen.dart';
 
 class InquiryScreen extends StatefulWidget {
   const InquiryScreen({super.key});
@@ -19,6 +20,8 @@ class _InquiryScreenState extends State<InquiryScreen> {
 
   final TextEditingController searchController = TextEditingController();
 
+  String selectedStatus = "Pending";
+
   List<InquiryListModel> inquiryData = [];
   List<InquiryListModel> filteredInquiryData = [];
 
@@ -30,7 +33,7 @@ class _InquiryScreenState extends State<InquiryScreen> {
     super.initState();
     inquiryService = Provider.of<InquiryService>(context, listen: false);
     inquiryListBloc = InquiryListBloc(inquiryService);
-    inquiryListBloc.init();
+    inquiryListBloc.init(selectedStatus);
   }
 
   @override
@@ -89,7 +92,7 @@ class _InquiryScreenState extends State<InquiryScreen> {
                     );
 
                     if (result == true) {
-                      inquiryListBloc.init();
+                      inquiryListBloc.init("Pending");
                     }
 
                     // Reload inquiry list/API here if needed
@@ -127,7 +130,11 @@ class _InquiryScreenState extends State<InquiryScreen> {
             ),
           ),
 
-          const SizedBox(height: 15),
+          const SizedBox(height: 10),
+
+          _buildStatusButtons(),
+
+          const SizedBox(height: 10),
 
           _buildInquiryListBody()
 
@@ -233,14 +240,15 @@ class _InquiryScreenState extends State<InquiryScreen> {
                       ),
                     ),
                     columnWidths: const {
-                      0: FixedColumnWidth(30),
-                      1: FixedColumnWidth(80),
-                      2: FixedColumnWidth(100),
+                      0: FixedColumnWidth(70), // Action
+                      1: FixedColumnWidth(40), // S.No
+                      2: FixedColumnWidth(90), // Division
                       3: FixedColumnWidth(120),
-                      4: FixedColumnWidth(80),
-                      5: FixedColumnWidth(150),
-                      6: FixedColumnWidth(130),
-                      7: FixedColumnWidth(110),
+                      4: FixedColumnWidth(120),
+                      5: FixedColumnWidth(90),
+                      6: FixedColumnWidth(170),
+                      7: FixedColumnWidth(140),
+                      8: FixedColumnWidth(120),
                     },
                     children: [
                       TableRow(
@@ -248,6 +256,7 @@ class _InquiryScreenState extends State<InquiryScreen> {
                           color: Color(0xff0A174B),
                         ),
                         children: [
+                          header("Action"),
                           header("S.No"),
                           header("Division"),
                           header("Customer"),
@@ -270,6 +279,7 @@ class _InquiryScreenState extends State<InquiryScreen> {
                                 : const Color(0xffF8FAFC),
                           ),
                           children: [
+                            item.status == "Pending" ? actionCell(item) : Container(),
                             cell("${index + 1}", center: true),
                             cell(item.division),
                             cell(item.customerName),
@@ -319,6 +329,39 @@ class _InquiryScreenState extends State<InquiryScreen> {
     );
   }
 
+  Widget actionCell(InquiryListModel item) {
+    return Center(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () async {
+          final result = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(
+              builder: (_) => EditInquiryScreen(inquiry: item),
+            ),
+          );
+
+          if (result == true) {
+            inquiryListBloc.init("Pending");
+          }
+          // Edit action
+        },
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: const Color(0xff0A174B).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Icon(
+            Icons.edit,
+            color: Color(0xff0A174B),
+            size: 18,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget header(String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
@@ -341,6 +384,115 @@ class _InquiryScreenState extends State<InquiryScreen> {
         textAlign: center ? TextAlign.center : TextAlign.start,
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(fontSize: 12, color: Color(0xff374151)),
+      ),
+    );
+  }
+
+  Widget _buildStatusButtons() {
+    final List<Map<String, dynamic>> statuses = [
+      {
+        "title": "All",
+        "value": "",
+        "color": Colors.blueGrey,
+        "icon": Icons.apps_rounded,
+      },
+      {
+        "title": "Pending",
+        "value": "Pending",
+        "color": Colors.orange,
+        "icon": Icons.schedule_rounded,
+      },
+      {
+        "title": "Completed",
+        "value": "Completed",
+        "color": Colors.green,
+        "icon": Icons.check_circle_rounded,
+      },
+      {
+        "title": "Hold",
+        "value": "Hold",
+        "color": Colors.redAccent,
+        "icon": Icons.pause_circle_rounded,
+      },
+    ];
+
+    return SizedBox(
+      height: 38,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        itemCount: statuses.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (_, index) {
+          final item = statuses[index];
+          final Color color = item["color"] as Color;
+          final bool selected = selectedStatus == item["value"];
+
+          return InkWell(
+            borderRadius: BorderRadius.circular(30),
+            onTap: () {
+              setState(() {
+                selectedStatus = item["value"];
+              });
+
+              inquiryListBloc.init(item["value"]);
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 5,
+              ),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                gradient: selected
+                    ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    color,
+                    color.withOpacity(.75),
+                  ],
+                )
+                    : null,
+                color: selected ? null : Colors.white,
+                border: Border.all(
+                  color: color.withOpacity(.45),
+                  width: 1.2,
+                ),
+                boxShadow: selected
+                    ? [
+                  BoxShadow(
+                    color: color.withOpacity(.30),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+                    : [],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    item["icon"],
+                    size: 12,
+                    color: selected ? Colors.white : color,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    item["title"],
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: selected ? Colors.white : color,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
